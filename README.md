@@ -7,7 +7,7 @@
     ─「 ᴅᴇᴩʟᴏʏ ᴏɴ ʜᴇʀᴏᴋᴜ 」─
 </h3>
 
-<p align="center"><a href="https://dashboard.heroku.com/new?template=https://github.com/shivashish44/preet_deal_bot"> <img src="https://www.herokucdn.com/deploy/button.svg"></a></p>
+<p align="center"><a href="https://dashboard.heroku.com/new?template=https://github.com/THE-SHIV-OFFICIAL/dealBot"> <img src="https://www.herokucdn.com/deploy/button.svg"></a></p>
 
 <br />
 
