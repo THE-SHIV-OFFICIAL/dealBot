@@ -11,7 +11,7 @@
     "upi",
     "telegram-accounts"
   ],
-  "repository": "https://github.com/shivashish44/preet_deal_bot",
+  "repository": "https://github.com/THE-SHIV-OFFICIAL/dealBot",
   "stack": "heroku-24",
   "buildpacks": [
     {
