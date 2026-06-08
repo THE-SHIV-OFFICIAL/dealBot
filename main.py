@@ -8,11 +8,16 @@ from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQ
 from motor.motor_asyncio import AsyncIOMotorClient
 
 # --- CONFIGURATION ---
-API_ID = int(os.getenv("API_ID", ""))
+try:
+    API_ID = int(os.getenv("API_ID", "0"))
+    OWNER_ID = int(os.getenv("OWNER_ID", "0"))
+except ValueError:
+    print("❌ CRITICAL ERROR: API_ID or OWNER_ID is incorrectly formatted in Heroku Config Vars. They must be numbers only, no letters.")
+    exit()
+
 API_HASH = os.getenv("API_HASH", "")
 BOT_TOKEN = os.getenv("BOT_TOKEN", "")
 MONGO_URL = os.getenv("MONGO_URL", "")
-OWNER_ID = int(os.getenv("OWNER_ID", ""))
 
 def parse_env_chat(env_var):
     val = os.getenv(env_var, "").strip()
