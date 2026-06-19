@@ -11,13 +11,9 @@ from motor.motor_asyncio import AsyncIOMotorClient
 try:
     API_ID = int(os.getenv("API_ID", "0"))
     OWNER_ID = int(os.getenv("OWNER_ID", "0"))
-    # Load SUDOERS from environment if available
-    SUDO_USERS = [int(x) for x in os.getenv("SUDO_USERS", "").split()]
 except ValueError:
-    print("❌ CRITICAL ERROR: API_ID or OWNER_ID is incorrectly formatted in Heroku Config Vars. They must be numbers only, no letters.")
+    print("❌ CRITICAL ERROR: API_ID or OWNER_ID is incorrectly formatted in Heroku Config Vars.")
     exit()
-except Exception:
-    SUDO_USERS = []
 
 API_HASH = os.getenv("API_HASH", "")
 BOT_TOKEN = os.getenv("BOT_TOKEN", "")
@@ -29,11 +25,8 @@ def parse_env_chat(env_var):
     try: return int(val)
     except ValueError: return val
 
-# Dono log groups yahan setup hain
-LOG_GROUP = parse_env_chat("@madarchodbharwarandiwala")
-LOG_GROUP_2 = parse_env_chat("@your_second_log_group") # Yahan apna Logger 2 daal do
-
-# Is array me humne dono valid chats daal diye hain
+LOG_GROUP = parse_env_chat("LOG_GROUP")
+LOG_GROUP_2 = parse_env_chat("LOG_GROUP_2")
 VALID_LOG_CHATS = [c for c in [LOG_GROUP, LOG_GROUP_2] if c]
 
 # Default Fallback Values
@@ -42,7 +35,6 @@ DEFAULT_QR = "https://files.catbox.moe/hiyazb.jpg"
 DEFAULT_START_IMG = "https://files.catbox.moe/hxp6b4.jpg"
 DEFAULT_BTN_TEXT = "Premium Store"
 
-# Text Templates
 DEFAULT_START_TEXT = (
     "Hey, **{name}**\n\n"
     "🌟 **Welcome to Mahi Premium Store!**\n"
@@ -76,46 +68,14 @@ SERVICES = {}
 BOT_HOSTING = {}
 TELEGRAM_ACCS = {}
 SETTINGS = {}
-ADMIN_LIST = list(set([OWNER_ID] + SUDO_USERS))
+ADMIN_LIST = [OWNER_ID]
 FORWARD_MAP = {} 
 
-# Steps
-ST_PHOTO = 1
-ST_UTR = 2
-ST_WAIT_EMAIL = 3
-ST_WAIT_NUM = 4
-ST_WAIT_OTP = 5
-ST_ADMIN_TXT = 6
-ST_ADMIN_GIVE_NUM = 7
-ST_ADMIN_GIVE_OTP = 8
+ST_PHOTO = 1; ST_UTR = 2; ST_WAIT_EMAIL = 3; ST_WAIT_NUM = 4; ST_WAIT_OTP = 5; ST_ADMIN_TXT = 6; ST_ADMIN_GIVE_NUM = 7; ST_ADMIN_GIVE_OTP = 8
+ST_EDIT_INPUT = 10; ST_ADD_PLAN_LABEL = 11; ST_ADD_PLAN_PRICE = 12; ST_EDIT_SETTING_TEXT = 13; ST_ADD_SRV_NAME = 20; ST_ADD_SRV_TYPE = 21; ST_ADD_SRV_DESC = 22; ST_BROADCAST = 30; ST_SET_IMAGE = 40; ST_EDIT_CHANNEL_TEMPLATE = 50
+ST_ADD_BOT_NAME = 60; ST_ADD_BOT_DESC = 61; ST_ADD_BOT_PLAN_LABEL = 62; ST_ADD_BOT_PLAN_PRICE = 63; ST_EDIT_BOT_INPUT = 64
+ST_ADD_TG_NAME = 70; ST_ADD_TG_DESC = 71; ST_ADD_TG_PLAN_LABEL = 72; ST_ADD_TG_PLAN_PRICE = 73; ST_EDIT_TG_INPUT = 74
 
-# Admin Edit States
-ST_EDIT_INPUT = 10
-ST_ADD_PLAN_LABEL = 11
-ST_ADD_PLAN_PRICE = 12
-ST_EDIT_SETTING_TEXT = 13
-ST_ADD_SRV_NAME = 20
-ST_ADD_SRV_TYPE = 21
-ST_ADD_SRV_DESC = 22
-ST_BROADCAST = 30
-ST_SET_IMAGE = 40
-ST_EDIT_CHANNEL_TEMPLATE = 50
-
-# Bot Making & Hosting Edit States
-ST_ADD_BOT_NAME = 60
-ST_ADD_BOT_DESC = 61
-ST_ADD_BOT_PLAN_LABEL = 62
-ST_ADD_BOT_PLAN_PRICE = 63
-ST_EDIT_BOT_INPUT = 64
-
-# Telegram Edit States
-ST_ADD_TG_NAME = 70
-ST_ADD_TG_DESC = 71
-ST_ADD_TG_PLAN_LABEL = 72
-ST_ADD_TG_PLAN_PRICE = 73
-ST_EDIT_TG_INPUT = 74
-
-# --- RANDOM START STICKERS & EFFECTS ---
 START_STICKERS = [
     "CAACAgUAAxkBAAFJgZ1qBGwx9Z9vW5BhG3dw0l1A5j4CyQACXRYAAuc-wVWs4--9DGlDKzsE",
     "CAACAgUAAxkBAAFKelNqEpxWO7Puzufo1iQiJ7wQCeC2TgACFSUAAtcjOFV-i8xuB1WKAzsE",
@@ -135,17 +95,11 @@ def get_safe_photo(photo_url):
         return photo_url
     return "https://files.catbox.moe/n22tbs.jpg"
 
-# --- DEFAULT TEXT ---
 DESC_OTP = "• Activation via Mobile Number & OTP.\n• 100% Secure & Trusted."
 DESC_INVITE = "• Subscription activated on your Email.\n• We will send an invite link."
 DESC_IDPASS = "• We will provide Email & Password.\n• Login and enjoy."
-DESC_HOTSTAR_PREM = (
-    "• **We Provide the Number:** Admin will send you a registered Mobile Number.\n"
-    "• **Easy Login:** Just enter that number in your App & request OTP here.\n"
-    "• **Instant Access:** We give you the code, and you start watching! 🍿"
-)
+DESC_HOTSTAR_PREM = "• **We Provide the Number:** Admin will send you a registered Mobile Number.\n• **Easy Login:** Just enter that number in your App & request OTP here.\n• **Instant Access:** We give you the code, and you start watching! 🍿"
 
-# --- DEFAULT DATA GENERATORS ---
 DEFAULT_BOT_HOSTING = {
     "bot_dev": { "name": "🤖 Custom Bot Development", "desc": "Get your own Telegram Bot fully tailored to your needs.\n• High-quality clean code\n• Direct support from dev", "plans": [{"id": "b_basic", "label": "Basic Setup", "price": 499}, {"id": "b_adv", "label": "Advanced Bot", "price": 1499}]},
     "vps_hosting": { "name": "🖥️ VPS & Bot Hosting", "desc": "Keep your bot online 24/7 with zero downtime.\n• Fast & Reliable Server\n• Free setup assistance", "plans": [{"id": "v_1m", "label": "1 Month Hosting", "price": 150}, {"id": "v_3m", "label": "3 Months Hosting", "price": 400}]},
@@ -205,7 +159,7 @@ async def save_telegram_accs_to_db(data): await col_telegram_accs.update_one({"_
 async def save_settings_to_db(data):
     global ADMIN_LIST
     await col_settings.update_one({"_id": "site_settings"}, {"$set": {"data": data}}, upsert=True)
-    ADMIN_LIST = list(set(data.get("admins", [OWNER_ID]) + SUDO_USERS))
+    ADMIN_LIST = data.get("admins", [OWNER_ID])
 async def add_user_to_db(user_id): await col_users.update_one({"_id": user_id}, {"$set": {"active": True}}, upsert=True)
 async def get_total_users(): return await col_users.count_documents({})
 
@@ -223,7 +177,7 @@ def create_btn(text, cb=None, url=None, user_id=None, style=ButtonStyle.PRIMARY,
     if not no_emoji and PREMIUM_EMOJIS: kwargs["icon_custom_emoji_id"] = random.choice(PREMIUM_EMOJIS)
     return InlineKeyboardButton(**kwargs)
 
-# --- KEYBOARDS ---
+# --- DYNAMIC KEYBOARDS ---
 def get_start_keyboard():
     s_map = get_style_map()
     btn_txt = SETTINGS.get("start_btn_text", DEFAULT_BTN_TEXT).replace("🛒 ", "")
@@ -248,10 +202,11 @@ def get_main_shop_keyboard():
     for i in range(0, len(all_keys), 2):
         row = []
         k1 = all_keys[i]
-        row.append(create_btn(f"🔹 {SERVICES[k1]['name']}", cb=f"srv|{k1}", style=s_map[3]))
+        idx = (i // 2) % 3 + 1 # cycles 1, 2, 3 dynamically per row
+        row.append(create_btn(f"🔹 {SERVICES[k1]['name']}", cb=f"srv|{k1}", style=s_map[idx]))
         if i + 1 < len(all_keys):
             key2 = all_keys[i+1]
-            row.append(create_btn(f"🔹 {SERVICES[key2]['name']}", cb=f"srv|{key2}", style=s_map[3]))
+            row.append(create_btn(f"🔹 {SERVICES[key2]['name']}", cb=f"srv|{key2}", style=s_map[idx]))
         buttons.append(row)
     buttons.append([create_btn("❌ Back to Main Menu", cb="main_menu", style=ButtonStyle.SECONDARY)])
     return InlineKeyboardMarkup(buttons)
@@ -263,10 +218,11 @@ def get_bots_keyboard():
     for i in range(0, len(all_keys), 2):
         row = []
         k1 = all_keys[i]
-        row.append(create_btn(f"{BOT_HOSTING[k1]['name']}", cb=f"bot_srv|{k1}", style=s_map[1]))
+        idx = (i // 2) % 3 + 1
+        row.append(create_btn(f"{BOT_HOSTING[k1]['name']}", cb=f"bot_srv|{k1}", style=s_map[idx]))
         if i + 1 < len(all_keys):
             k2 = all_keys[i+1]
-            row.append(create_btn(f"{BOT_HOSTING[k2]['name']}", cb=f"bot_srv|{k2}", style=s_map[1]))
+            row.append(create_btn(f"{BOT_HOSTING[k2]['name']}", cb=f"bot_srv|{k2}", style=s_map[idx]))
         btns.append(row)
     btns.append([create_btn("❌ Back to Store", cb="open_shop", style=ButtonStyle.SECONDARY)])
     return InlineKeyboardMarkup(btns)
@@ -278,35 +234,37 @@ def get_telegram_accs_keyboard():
     for i in range(0, len(all_keys), 2):
         row = []
         k1 = all_keys[i]
-        row.append(create_btn(f"{TELEGRAM_ACCS[k1]['name']}", cb=f"tg_srv|{k1}", style=s_map[2]))
+        idx = (i // 2) % 3 + 1
+        row.append(create_btn(f"{TELEGRAM_ACCS[k1]['name']}", cb=f"tg_srv|{k1}", style=s_map[idx]))
         if i + 1 < len(all_keys):
             k2 = all_keys[i+1]
-            row.append(create_btn(f"{TELEGRAM_ACCS[k2]['name']}", cb=f"tg_srv|{k2}", style=s_map[2]))
+            row.append(create_btn(f"{TELEGRAM_ACCS[k2]['name']}", cb=f"tg_srv|{k2}", style=s_map[idx]))
         btns.append(row)
     btns.append([create_btn("❌ Back to Store", cb="open_shop", style=ButtonStyle.SECONDARY)])
     return InlineKeyboardMarkup(btns)
 
 def get_admin_dashboard():
+    s_map = get_style_map()
     m_text = "🟢 Maint: OFF" if not SETTINGS.get("maintenance") else "🔴 Maint: ON"
     btns = [
-        [create_btn("✅ Add Service", cb="add_service", style=ButtonStyle.SUCCESS)],
-        [create_btn("🤖 Manage Bots/Hosting", cb="manage_bots", style=ButtonStyle.PRIMARY), create_btn("📱 Manage Telegram", cb="manage_telegram_accs", style=ButtonStyle.PRIMARY)],
-        [create_btn("⚠️ Website Settings", cb="edit_settings", style=ButtonStyle.DANGER)],
-        [create_btn("🔹 Broadcast", cb="broadcast_msg", style=ButtonStyle.PRIMARY), create_btn(m_text, cb="toggle_maint", style=ButtonStyle.SECONDARY)]
+        [create_btn("✅ Add Service", cb="add_service", style=s_map[1])],
+        [create_btn("🤖 Manage Bots", cb="manage_bots", style=s_map[2]), create_btn("📱 Manage TG", cb="manage_telegram_accs", style=s_map[2])],
+        [create_btn("⚠️ Website Settings", cb="edit_settings", style=s_map[3])],
+        [create_btn("🔹 Broadcast", cb="broadcast_msg", style=s_map[1]), create_btn(m_text, cb="toggle_maint", style=ButtonStyle.SECONDARY)]
     ]
     keys = list(SERVICES.keys())
     for i in range(0, len(keys), 2):
         row = []
         k1 = keys[i]
-        row.append(create_btn(f"✏️ {SERVICES[k1]['name']}", cb=f"edit|{k1}", style=ButtonStyle.SECONDARY))
+        idx = (i // 2) % 3 + 1
+        row.append(create_btn(f"✏️ {SERVICES[k1]['name']}", cb=f"edit|{k1}", style=s_map[idx]))
         if i+1 < len(keys):
             k2 = keys[i+1]
-            row.append(create_btn(f"✏️ {SERVICES[k2]['name']}", cb=f"edit|{k2}", style=ButtonStyle.SECONDARY))
+            row.append(create_btn(f"✏️ {SERVICES[k2]['name']}", cb=f"edit|{k2}", style=s_map[idx]))
         btns.append(row)
     return InlineKeyboardMarkup(btns)
 
 # --- COMMANDS ---
-
 @app.on_message(filters.command("id"))
 async def show_id(client, message):
     await message.reply(f"🆔 **ID:** `{message.from_user.id}`")
@@ -352,7 +310,6 @@ async def start(client, message):
         await message.reply("🚧 **Store Closed.**")
         return
         
-    # LOG NEW USER TO BOTH LOG CHATS
     uname = f"@{message.from_user.username}" if message.from_user.username else "No Username"
     start_log_text = (
         "🆕 **New User Started Bot!**\n\n"
@@ -462,8 +419,11 @@ async def callbacks(client, callback: CallbackQuery):
             return
 
         elif data == "manage_bots":
-            btns = [[create_btn("✅ Add Bot/Hosting Setup", cb="add_bot", style=ButtonStyle.SUCCESS)]]
-            for k, v in BOT_HOSTING.items(): btns.append([create_btn(f"{v['name']}", cb=f"ed_bot|{k}", style=ButtonStyle.PRIMARY)])
+            s_map = get_style_map()
+            btns = [[create_btn("✅ Add Setup", cb="add_bot", style=s_map[1])]]
+            for i, (k, v) in enumerate(BOT_HOSTING.items()): 
+                idx = (i % 3) + 1
+                btns.append([create_btn(f"{v['name']}", cb=f"ed_bot|{k}", style=s_map[idx])])
             btns.append([create_btn("❌ Back", cb="adm_back", style=ButtonStyle.SECONDARY)])
             await callback.message.edit_text("🤖 **Manage Bot Making & Hosting**", reply_markup=InlineKeyboardMarkup(btns))
             return
@@ -476,7 +436,8 @@ async def callbacks(client, callback: CallbackQuery):
         elif data.startswith("ed_bot|"):
             key = data.split("|")[1]
             if key not in BOT_HOSTING: return
-            btns = [[create_btn("🔹 Name", cb=f"ed_bfield|{key}|name", style=ButtonStyle.PRIMARY), create_btn("ℹ️ Desc", cb=f"ed_bfield|{key}|desc", style=ButtonStyle.PRIMARY)], [create_btn("✅ Add Plan", cb=f"add_bplan|{key}", style=ButtonStyle.SUCCESS)]]
+            s_map = get_style_map()
+            btns = [[create_btn("🔹 Name", cb=f"ed_bfield|{key}|name", style=s_map[1]), create_btn("ℹ️ Desc", cb=f"ed_bfield|{key}|desc", style=s_map[1])], [create_btn("✅ Add Plan", cb=f"add_bplan|{key}", style=ButtonStyle.SUCCESS)]]
             for plan in BOT_HOSTING[key]["plans"]: btns.append([create_btn(f"❌ Del: {plan['label']} (₹{plan['price']})", cb=f"del_bplan|{key}|{plan['id']}", style=ButtonStyle.DANGER)])
             btns.append([create_btn("❌ DELETE ITEM", cb=f"del_bot|{key}", style=ButtonStyle.DANGER)])
             btns.append([create_btn("⚠️ Back", cb="manage_bots", style=ButtonStyle.SECONDARY)])
@@ -512,8 +473,11 @@ async def callbacks(client, callback: CallbackQuery):
             return
 
         elif data == "manage_telegram_accs":
-            btns = [[create_btn("✅ Add Telegram Config", cb="add_telegram_acc", style=ButtonStyle.SUCCESS)]]
-            for k, v in TELEGRAM_ACCS.items(): btns.append([create_btn(f"🔹 {v['name']}", cb=f"ed_tg|{k}", style=ButtonStyle.PRIMARY)])
+            s_map = get_style_map()
+            btns = [[create_btn("✅ Add Telegram Config", cb="add_telegram_acc", style=s_map[1])]]
+            for i, (k, v) in enumerate(TELEGRAM_ACCS.items()): 
+                idx = (i % 3) + 1
+                btns.append([create_btn(f"🔹 {v['name']}", cb=f"ed_tg|{k}", style=s_map[idx])])
             btns.append([create_btn("❌ Back", cb="adm_back", style=ButtonStyle.SECONDARY)])
             await callback.message.edit_text("📱 **Manage Telegram Categories**", reply_markup=InlineKeyboardMarkup(btns))
             return
@@ -526,7 +490,8 @@ async def callbacks(client, callback: CallbackQuery):
         elif data.startswith("ed_tg|"):
             key = data.split("|")[1]
             if key not in TELEGRAM_ACCS: return
-            btns = [[create_btn("🔹 Name", cb=f"ed_tgfield|{key}|name", style=ButtonStyle.PRIMARY), create_btn("ℹ️ Desc", cb=f"ed_tgfield|{key}|desc", style=ButtonStyle.PRIMARY)], [create_btn("✅ Add Plan", cb=f"add_tgplan|{key}", style=ButtonStyle.SUCCESS)]]
+            s_map = get_style_map()
+            btns = [[create_btn("🔹 Name", cb=f"ed_tgfield|{key}|name", style=s_map[1]), create_btn("ℹ️ Desc", cb=f"ed_tgfield|{key}|desc", style=s_map[1])], [create_btn("✅ Add Plan", cb=f"add_tgplan|{key}", style=ButtonStyle.SUCCESS)]]
             for plan in TELEGRAM_ACCS[key]["plans"]: btns.append([create_btn(f"❌ Del: {plan['label']} (₹{plan['price']})", cb=f"del_tgplan|{key}|{plan['id']}", style=ButtonStyle.DANGER)])
             btns.append([create_btn("❌ DELETE CATEGORY", cb=f"del_tg|{key}", style=ButtonStyle.DANGER)])
             btns.append([create_btn("⚠️ Back", cb="manage_telegram_accs", style=ButtonStyle.SECONDARY)])
@@ -567,14 +532,15 @@ async def callbacks(client, callback: CallbackQuery):
             return
 
         elif data == "edit_settings":
+            s_map = get_style_map()
             btns = [
-                [create_btn("Terms", cb="ed_set|terms", style=ButtonStyle.PRIMARY), create_btn("Help", cb="ed_set|help", style=ButtonStyle.PRIMARY)],
-                [create_btn("Contact", cb="ed_set|contact", style=ButtonStyle.PRIMARY), create_btn("Set UPI", cb="ed_set|upi_id", style=ButtonStyle.PRIMARY)],
-                [create_btn("Btn Name", cb="ed_set|start_btn_text", style=ButtonStyle.PRIMARY), create_btn("Channel ID", cb="ed_set|proof_channel", style=ButtonStyle.PRIMARY)],
-                [create_btn("Start Text", cb="ed_set|start_text", style=ButtonStyle.PRIMARY), create_btn("Channel Template", cb="ed_set|channel_template", style=ButtonStyle.PRIMARY)], 
-                [create_btn("Btn 1 Name", cb="ed_set|btn1_text", style=ButtonStyle.PRIMARY), create_btn("Btn 1 URL", cb="ed_set|btn1_url", style=ButtonStyle.PRIMARY)],
-                [create_btn("Btn 2 Name", cb="ed_set|btn2_text", style=ButtonStyle.PRIMARY), create_btn("Btn 2 URL", cb="ed_set|btn2_url", style=ButtonStyle.PRIMARY)],
-                [create_btn("Start Image", cb="set_img|start_image", style=ButtonStyle.PRIMARY), create_btn("QR Image", cb="set_img|qr_image", style=ButtonStyle.PRIMARY)],
+                [create_btn("Terms", cb="ed_set|terms", style=s_map[1]), create_btn("Help", cb="ed_set|help", style=s_map[1])],
+                [create_btn("Contact", cb="ed_set|contact", style=s_map[2]), create_btn("Set UPI", cb="ed_set|upi_id", style=s_map[2])],
+                [create_btn("Btn Name", cb="ed_set|start_btn_text", style=s_map[3]), create_btn("Channel ID", cb="ed_set|proof_channel", style=s_map[3])],
+                [create_btn("Start Text", cb="ed_set|start_text", style=s_map[1]), create_btn("Channel Template", cb="ed_set|channel_template", style=s_map[1])], 
+                [create_btn("Btn 1 Name", cb="ed_set|btn1_text", style=s_map[2]), create_btn("Btn 1 URL", cb="ed_set|btn1_url", style=s_map[2])],
+                [create_btn("Btn 2 Name", cb="ed_set|btn2_text", style=s_map[3]), create_btn("Btn 2 URL", cb="ed_set|btn2_url", style=s_map[3])],
+                [create_btn("Start Image", cb="set_img|start_image", style=s_map[1]), create_btn("QR Image", cb="set_img|qr_image", style=s_map[1])],
                 [create_btn("❌ Back", cb="adm_back", style=ButtonStyle.SECONDARY)]
             ]
             await callback.message.edit_text("⚙️ **Settings**", reply_markup=InlineKeyboardMarkup(btns))
@@ -616,7 +582,8 @@ async def callbacks(client, callback: CallbackQuery):
             key = data.split("|")[1]
             if key not in SERVICES: return await callback.answer("Not found", show_alert=True)
             srv = SERVICES[key]
-            btns = [[create_btn("🔹 Name", cb=f"ed_field|{key}|name", style=ButtonStyle.PRIMARY), create_btn("ℹ️ Desc", cb=f"ed_field|{key}|desc", style=ButtonStyle.PRIMARY)], [create_btn("✅ Add Plan", cb=f"add_plan|{key}", style=ButtonStyle.SUCCESS)]]
+            s_map = get_style_map()
+            btns = [[create_btn("🔹 Name", cb=f"ed_field|{key}|name", style=s_map[1]), create_btn("ℹ️ Desc", cb=f"ed_field|{key}|desc", style=s_map[1])], [create_btn("✅ Add Plan", cb=f"add_plan|{key}", style=ButtonStyle.SUCCESS)]]
             for plan in srv["plans"]: btns.append([create_btn(f"❌ Del: {plan['label']} (₹{plan['price']})", cb=f"del_plan|{key}|{plan['id']}", style=ButtonStyle.DANGER)])
             btns.append([create_btn("❌ DELETE SERVICE", cb=f"del_srv|{key}", style=ButtonStyle.DANGER)])
             btns.append([create_btn("⚠️ Back", cb="adm_back", style=ButtonStyle.SECONDARY)])
@@ -660,14 +627,17 @@ async def callbacks(client, callback: CallbackQuery):
             await callback.message.edit_text("❌ Cancelled.", reply_markup=get_admin_dashboard())
             return
 
-    # USER SECTIONS
+    # USER SECTIONS - WITH FULL DYNAMIC STYLE MAPS NOW
     if data.startswith("srv|"):
         key = data.split("|")[1]
         if key not in SERVICES: return await callback.answer("Unavailable", show_alert=True)
         srv = SERVICES[key]
         if not srv["plans"]: return await callback.answer("Coming Soon", show_alert=True)
+        s_map = get_style_map()
         btns = []
-        for plan in srv["plans"]: btns.append([create_btn(f"🔹 {plan['label']} - ₹{plan['price']}", cb=f"pay|{key}|{plan['id']}", style=ButtonStyle.PRIMARY)])
+        for i, plan in enumerate(srv["plans"]): 
+            idx = (i % 3) + 1
+            btns.append([create_btn(f"🔹 {plan['label']} - ₹{plan['price']}", cb=f"pay|{key}|{plan['id']}", style=s_map[idx])])
         btns.append([create_btn("❌ Back", cb="open_shop", style=ButtonStyle.SECONDARY)])
         await callback.message.edit_caption(f"**{srv['name']}**\n\n{srv['desc']}\n\n👇 **Select duration:**", reply_markup=InlineKeyboardMarkup(btns))
 
@@ -676,8 +646,11 @@ async def callbacks(client, callback: CallbackQuery):
         if key not in BOT_HOSTING: return await callback.answer("Removed", show_alert=True)
         bot_item = BOT_HOSTING[key]
         if not bot_item.get("plans"): return await callback.answer("No plans", show_alert=True)
+        s_map = get_style_map()
         btns = []
-        for plan in bot_item["plans"]: btns.append([create_btn(f"🔹 {plan['label']} - ₹{plan['price']}", cb=f"pay|{key}|{plan['id']}", style=ButtonStyle.PRIMARY)])
+        for i, plan in enumerate(bot_item["plans"]): 
+            idx = (i % 3) + 1
+            btns.append([create_btn(f"🔹 {plan['label']} - ₹{plan['price']}", cb=f"pay|{key}|{plan['id']}", style=s_map[idx])])
         btns.append([create_btn("❌ Back", cb="open_bots", style=ButtonStyle.SECONDARY)])
         await callback.message.edit_caption(f"**{bot_item['name']}**\n\n{bot_item.get('desc', '')}\n\n👇 **Select Plan:**", reply_markup=InlineKeyboardMarkup(btns))
 
@@ -686,8 +659,11 @@ async def callbacks(client, callback: CallbackQuery):
         if key not in TELEGRAM_ACCS: return await callback.answer("Config Removed", show_alert=True)
         tg_acc = TELEGRAM_ACCS[key]
         if not tg_acc.get("plans"): return await callback.answer("No configurations", show_alert=True)
+        s_map = get_style_map()
         btns = []
-        for plan in tg_acc["plans"]: btns.append([create_btn(f"🔹 {plan['label']} - ₹{plan['price']}", cb=f"pay|{key}|{plan['id']}", style=ButtonStyle.PRIMARY)])
+        for i, plan in enumerate(tg_acc["plans"]): 
+            idx = (i % 3) + 1
+            btns.append([create_btn(f"🔹 {plan['label']} - ₹{plan['price']}", cb=f"pay|{key}|{plan['id']}", style=s_map[idx])])
         btns.append([create_btn("❌ Back", cb="open_telegram_accs", style=ButtonStyle.SECONDARY)])
         await callback.message.edit_caption(f"**{tg_acc['name']}**\n\n{tg_acc.get('desc', '')}\n\n👇 **Select Package:**", reply_markup=InlineKeyboardMarkup(btns))
 
@@ -726,7 +702,7 @@ async def callbacks(client, callback: CallbackQuery):
             except: pass
         await callback.message.edit_text("⏳ **Waiting for OTP...**")
 
-    # FULFILLMENT (ADMIN TRACKING ADDED)
+    # FULFILLMENT
     if uid in ADMIN_LIST and data.startswith("adm_"):
         if "|" not in data: return
         action = data.split("|")[0]
@@ -786,17 +762,11 @@ if VALID_LOG_CHATS:
         if not replied_msg: return
         
         target_uid = None
-        
-        # Method 1: Extraction from Profile Card
         if replied_msg.text and "🆔 **ID:** `" in replied_msg.text:
             try: target_uid = int(replied_msg.text.split("🆔 **ID:** `")[1].split("`")[0])
             except: pass
-            
-        # Method 2: Fallback memory tracking
         elif replied_msg.id in FORWARD_MAP:
             target_uid = FORWARD_MAP[replied_msg.id]
-            
-        # Method 3: Telegram Native Forward track
         elif replied_msg.forward_from:
             target_uid = replied_msg.forward_from.id
 
@@ -813,7 +783,6 @@ if VALID_LOG_CHATS:
 async def main_message_handler(client, message):
     uid = message.from_user.id
 
-    # 1. CHECK IF USER/ADMIN IS IN A STATE
     if uid in USER_STATE:
         state = USER_STATE[uid]
         step = state.get("step")
@@ -841,7 +810,7 @@ async def main_message_handler(client, message):
             if step == ST_ADD_SRV_NAME:
                 USER_STATE[uid]["name"] = message.text
                 USER_STATE[uid]["step"] = ST_ADD_SRV_TYPE
-                btns = [[create_btn("Standard OTP", cb="sel_type|otp", style=ButtonStyle.PRIMARY)], [create_btn("Admin OTP", cb="sel_type|admin_otp", style=ButtonStyle.PRIMARY)], [create_btn("Invite", cb="sel_type|invite", style=ButtonStyle.PRIMARY)], [create_btn("ID/Pass", cb="sel_type|std", style=ButtonStyle.PRIMARY)]]
+                btns = [[create_btn("Standard OTP", cb="sel_type|otp")], [create_btn("Admin OTP", cb="sel_type|admin_otp")], [create_btn("Invite", cb="sel_type|invite")], [create_btn("ID/Pass", cb="sel_type|std")]]
                 await message.reply("⚙️ **Select Type**", reply_markup=InlineKeyboardMarkup(btns))
                 return
             if step == ST_ADD_SRV_DESC:
@@ -961,7 +930,7 @@ async def main_message_handler(client, message):
                     else: return await message.reply("⚠️ Please send text.")
                 elif step == ST_ADMIN_GIVE_NUM:
                     if message.text:
-                        btn = InlineKeyboardMarkup([[create_btn("🔹 🔓 Request OTP", cb="usr_req_otp", style=ButtonStyle.PRIMARY)]])
+                        btn = InlineKeyboardMarkup([[create_btn("🔹 🔓 Request OTP", cb="usr_req_otp")]])
                         await client.send_message(target_uid, f"✅ **Login Num:** `{message.text}`", reply_markup=btn)
                         await message.reply("✅ Sent.")
                     else: return
@@ -983,7 +952,6 @@ async def main_message_handler(client, message):
             else: await message.reply("⚠️ Please send a valid payment screenshot.")
             return
 
-        # FIX: The hanging issue was here. Unconditionally delete the state after submission (unless waiting for email).
         if step == ST_UTR:
             if message.text:
                 state["utr"] = message.text
@@ -998,7 +966,7 @@ async def main_message_handler(client, message):
                 else:
                     await send_proof_to_admin(client, uid, state)
                     await message.reply("✅ **Submitted!**")
-                    del USER_STATE[uid] # Now it will delete for all types (OTP, std, etc.)
+                    del USER_STATE[uid]
             else: await message.reply("⚠️ Please send your UTR text.")
             return
 
@@ -1013,7 +981,7 @@ async def main_message_handler(client, message):
         if step == ST_WAIT_NUM:
             if message.text:
                 for admin in ADMIN_LIST:
-                    try: await client.send_message(admin, f"📱 **User Num:** `{message.text}`\nUser: {uid}", reply_markup=InlineKeyboardMarkup([[create_btn("Request OTP", cb=f"adm_reqotp|{uid}", style=ButtonStyle.PRIMARY)]]))
+                    try: await client.send_message(admin, f"📱 **User Num:** `{message.text}`\nUser: {uid}", reply_markup=InlineKeyboardMarkup([[create_btn("Request OTP", cb=f"adm_reqotp|{uid}")]]))
                     except: pass
                 await message.reply("✅ Sent.")
             return
@@ -1027,7 +995,6 @@ async def main_message_handler(client, message):
                 del USER_STATE[uid]
             return
 
-    # 2. LOG NORMAL USER MESSAGES TO BOTH LOGGER GROUPS
     if message.from_user and uid not in ADMIN_LIST:
         for log_chat in VALID_LOG_CHATS:
             try:
@@ -1111,7 +1078,7 @@ async def main():
     doc_set = await col_settings.find_one({"_id": "site_settings"})
     if doc_set:
         SETTINGS = doc_set["data"]
-        ADMIN_LIST = list(set(SETTINGS.get("admins", [OWNER_ID]) + SUDO_USERS))
+        ADMIN_LIST = SETTINGS.get("admins", [OWNER_ID])
     else:
         SETTINGS = DEFAULT_SETTINGS
         await col_settings.insert_one({"_id": "site_settings", "data": SETTINGS})
