@@ -3,17 +3,21 @@ import os
 import uuid
 import random
 import re
-from pyrogram import Client, filters, idle
-from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery, InputMediaPhoto
+from kurigram import Client, filters, idle
+from kurigram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery, InputMediaPhoto, ButtonStyle
 from motor.motor_asyncio import AsyncIOMotorClient
 
 # --- CONFIGURATION ---
 try:
     API_ID = int(os.getenv("API_ID", "0"))
     OWNER_ID = int(os.getenv("OWNER_ID", "0"))
+    # Load SUDOERS from environment if available
+    SUDO_USERS = [int(x) for x in os.getenv("SUDO_USERS", "").split()]
 except ValueError:
     print("❌ CRITICAL ERROR: API_ID or OWNER_ID is incorrectly formatted in Heroku Config Vars. They must be numbers only, no letters.")
     exit()
+except Exception:
+    SUDO_USERS = []
 
 API_HASH = os.getenv("API_HASH", "")
 BOT_TOKEN = os.getenv("BOT_TOKEN", "")
@@ -25,9 +29,12 @@ def parse_env_chat(env_var):
     try: return int(val)
     except ValueError: return val
 
-LOG_CHANNEL = parse_env_chat("@vHtripJTTwwNzdlgzhn")
+# Dono log groups yahan setup hain
 LOG_GROUP = parse_env_chat("@madarchodbharwarandiwala")
-VALID_LOG_CHATS = [c for c in [LOG_CHANNEL, LOG_GROUP] if c]
+LOG_GROUP_2 = parse_env_chat("@your_second_log_group") # Yahan apna Logger 2 daal do
+
+# Is array me humne dono valid chats daal diye hain
+VALID_LOG_CHATS = [c for c in [LOG_GROUP, LOG_GROUP_2] if c]
 
 # Default Fallback Values
 DEFAULT_UPI = "shivashish-kumar@ptyes"
@@ -69,9 +76,7 @@ SERVICES = {}
 BOT_HOSTING = {}
 TELEGRAM_ACCS = {}
 SETTINGS = {}
-ADMIN_LIST = [OWNER_ID]
-
-# Message Mapping for Modular Reply System
+ADMIN_LIST = list(set([OWNER_ID] + SUDO_USERS))
 FORWARD_MAP = {} 
 
 # Steps
@@ -120,8 +125,8 @@ START_STICKERS = [
     "CAACAgUAAxkBAAFJgZ9qBGw3JfuXSHzy2b6iDYQWZ2bQUQACLwUAAmZV0VZ9oUejPkLcOjsE",
     "CAACAgQAAxkBAAFKHllqDSvVgtBMTpg8uBQqf1eAHFHP4AACBBIAAvAG2VFd6aEJ0tmFXDsE",
 ]
-
 EFFECT_IDS = [5046509860389126442, 5107584321108051014, 5104841245755180586, 5159385139981059251]
+PREMIUM_EMOJIS = []
 
 def get_safe_photo(photo_url):
     if isinstance(photo_url, list): return random.choice(photo_url)
@@ -156,26 +161,7 @@ DEFAULT_SERVICES_LIST = {
     "yt_prem": { "name": "YouTube Premium", "type": "invite", "desc": DESC_INVITE, "plans": [{"id": "1m", "label": "1 Month", "price": 35}]},
     "gemini": { "name": "Gemini AI", "type": "invite", "desc": DESC_INVITE, "plans": [{"id": "1m", "label": "1 Month", "price": 50}]},
     "hotstar_super": { "name": "Hotstar Super", "type": "otp", "desc": DESC_OTP, "plans": [{"id": "sup_1m", "label": "1 Month", "price": 60}]},
-    "hotstar_prem": { "name": "Hotstar Premium", "type": "admin_otp", "desc": DESC_HOTSTAR_PREM, "plans": [{"id": "prem_1m", "label": "1 Month", "price": 79}, {"id": "prem_3m", "label": "3 Months", "price": 199}]},
-    "sonyliv": { "name": "SonyLIV Premium", "type": "otp", "desc": DESC_OTP, "plans": [{"id": "1m", "label": "1 Month", "price": 60}]},
-    "zee5": { "name": "Zee5 Premium", "type": "otp", "desc": DESC_OTP, "plans": [{"id": "1y", "label": "1 Year", "price": 199}]},
-    "appletv": { "name": "Apple Tv", "type": "std", "desc": DESC_IDPASS, "plans": [{"id": "1m", "label": "1 Month", "price": 399}]},
-    "canva": { "name": "Canva Premium", "type": "invite", "desc": DESC_INVITE, "plans": [{"id": "1m", "label": "1 Month", "price": 25}, {"id": "3m", "label": "3 Month", "price": 50}, {"id": "6m", "label": "6 Month", "price": 75}, {"id": "12m", "label": "12 Month", "price": 100}]},
-    "apple_music": { "name": "Apple Music", "type": "std", "desc": DESC_IDPASS, "plans": [{"id": "6m", "label": "6 Months", "price": 399}]},
-    "linkedin": { "name": "LinkedIn Career", "type": "std", "desc": DESC_IDPASS, "plans": [{"id": "6m", "label": "6 Months", "price": 299}]},
-    "capcut": { "name": "CapCut Pro", "type": "std", "desc": DESC_IDPASS, "plans": [{"id": "1m", "label": "1 Month", "price": 299}]},
-    "proton": { "name": "Proton VPN", "type": "std", "desc": DESC_IDPASS, "plans": [{"id": "1m", "label": "1 Month", "price": 299}]},
-    "prime": { "name": "Prime Video", "type": "std", "desc": DESC_IDPASS, "plans": [{"id": "1m", "label": "1 Month", "price": 49}]},
-    "adobe": { "name": "Adobe Creative Cloud", "type": "invite", "desc": DESC_INVITE, "plans": [{"id": "1m", "label": "1 Month", "price": 499}]},
-    "ms365": { "name": "Microsoft 365", "type": "std", "desc": DESC_IDPASS, "plans": [{"id": "life", "label": "Lifetime", "price": 499}]},
-    "gemini_pro": { "name": "Gemini Pro Full", "type": "std", "desc": DESC_IDPASS, "plans": [{"id": "1m", "label": "1 Month", "price": 99}]},
-    "google_one": { "name": "Google One", "type": "invite", "desc": DESC_INVITE, "plans": [{"id": "1m", "label": "1 Month", "price": 49}]},
-    "times_prime": { "name": "Times Prime", "type": "otp", "desc": DESC_OTP, "plans": [{"id": "1y", "label": "1 Year", "price": 199}]},
-    "chatgpt": { "name": "ChatGpt", "type": "std", "desc": DESC_IDPASS, "plans": [{"id": "1m", "label": "1 Month", "price": 149}]},
-    "surfshark": { "name": "Surfshark VPN", "type": "std", "desc": DESC_IDPASS, "plans": [{"id": "1m", "label": "1 Month", "price": 69}]},
-    "octohide": { "name": "Octohide VPN", "type": "std", "desc": DESC_IDPASS, "plans": [{"id": "1m", "label": "1 Month", "price": 59}]},
-    "crunchyroll": { "name": "Crunchyroll", "type": "std", "desc": DESC_IDPASS, "plans": [{"id": "1m", "label": "1 Month", "price": 49}, {"id": "3m", "label": "3 Month", "price": 99}, {"id": "6m", "label": "6 Month", "price": 149}, {"id": "12m", "label": "12 Month", "price": 199}]},
-    "duolingo": { "name": "Duolingo (Super)", "type": "invite", "desc": DESC_INVITE, "plans": [{"id": "1y", "label": "1 Year", "price": 799}]}
+    "hotstar_prem": { "name": "Hotstar Premium", "type": "admin_otp", "desc": DESC_HOTSTAR_PREM, "plans": [{"id": "prem_1m", "label": "1 Month", "price": 79}, {"id": "prem_3m", "label": "3 Months", "price": 199}]}
 }
 
 DEFAULT_SETTINGS = {
@@ -219,82 +205,103 @@ async def save_telegram_accs_to_db(data): await col_telegram_accs.update_one({"_
 async def save_settings_to_db(data):
     global ADMIN_LIST
     await col_settings.update_one({"_id": "site_settings"}, {"$set": {"data": data}}, upsert=True)
-    ADMIN_LIST = data.get("admins", [OWNER_ID])
+    ADMIN_LIST = list(set(data.get("admins", [OWNER_ID]) + SUDO_USERS))
 async def add_user_to_db(user_id): await col_users.update_one({"_id": user_id}, {"$set": {"active": True}}, upsert=True)
 async def get_total_users(): return await col_users.count_documents({})
 
+# --- UI & KURIGRAM BUTTON ENGINE ---
+def get_style_map():
+    styles = [ButtonStyle.PRIMARY, ButtonStyle.SUCCESS, ButtonStyle.DANGER]
+    random.shuffle(styles)
+    return {1: styles[0], 2: styles[1], 3: styles[2]}
+
+def create_btn(text, cb=None, url=None, user_id=None, style=ButtonStyle.PRIMARY, no_emoji=True):
+    kwargs = {"text": text, "style": style}
+    if cb: kwargs["callback_data"] = cb
+    if url: kwargs["url"] = url
+    if user_id: kwargs["user_id"] = user_id
+    if not no_emoji and PREMIUM_EMOJIS: kwargs["icon_custom_emoji_id"] = random.choice(PREMIUM_EMOJIS)
+    return InlineKeyboardButton(**kwargs)
+
 # --- KEYBOARDS ---
 def get_start_keyboard():
+    s_map = get_style_map()
     btn_txt = SETTINGS.get("start_btn_text", DEFAULT_BTN_TEXT).replace("🛒 ", "")
     b1_txt = SETTINGS.get("btn1_text", "📢 Channel")
     b1_url = SETTINGS.get("btn1_url", "https://t.me/")
     b2_txt = SETTINGS.get("btn2_text", "💬 Group")
     b2_url = SETTINGS.get("btn2_url", "https://t.me/")
     return InlineKeyboardMarkup([
-        [InlineKeyboardButton(f"🔹 {btn_txt}", callback_data="open_shop")],
-        [InlineKeyboardButton("ℹ️ Terms of Service", callback_data="terms")],
-        [InlineKeyboardButton("⚠️ Contact", callback_data="contact"), InlineKeyboardButton("⚠️ Help", callback_data="help")],
-        [InlineKeyboardButton(f"🔹 {b1_txt}", url=b1_url), InlineKeyboardButton(f"🔹 {b2_txt}", url=b2_url)]
+        [create_btn(f"🔹 {btn_txt}", cb="open_shop", style=s_map[1])],
+        [create_btn("ℹ️ Terms of Service", cb="terms", style=s_map[2])],
+        [create_btn("⚠️ Contact", cb="contact", style=s_map[3]), create_btn("⚠️ Help", cb="help", style=s_map[3])],
+        [create_btn(f"🔹 {b1_txt}", url=b1_url, style=s_map[1]), create_btn(f"🔹 {b2_txt}", url=b2_url, style=s_map[1])]
     ])
 
 def get_main_shop_keyboard():
-    buttons = [[InlineKeyboardButton("🤖 Bot Making & Hosting 📂", callback_data="open_bots")], [InlineKeyboardButton("📱 Telegram Accounts 📂", callback_data="open_telegram_accs")]]
+    s_map = get_style_map()
+    buttons = [
+        [create_btn("🤖 Bot Making & Hosting 📂", cb="open_bots", style=s_map[1])], 
+        [create_btn("📱 Telegram Accounts 📂", cb="open_telegram_accs", style=s_map[2])]
+    ]
     all_keys = list(SERVICES.keys())
     for i in range(0, len(all_keys), 2):
         row = []
         k1 = all_keys[i]
-        row.append(InlineKeyboardButton(f"🔹 {SERVICES[k1]['name']}", callback_data=f"srv|{k1}"))
+        row.append(create_btn(f"🔹 {SERVICES[k1]['name']}", cb=f"srv|{k1}", style=s_map[3]))
         if i + 1 < len(all_keys):
             key2 = all_keys[i+1]
-            row.append(InlineKeyboardButton(f"🔹 {SERVICES[key2]['name']}", callback_data=f"srv|{key2}"))
+            row.append(create_btn(f"🔹 {SERVICES[key2]['name']}", cb=f"srv|{key2}", style=s_map[3]))
         buttons.append(row)
-    buttons.append([InlineKeyboardButton("❌ Back to Main Menu", callback_data="main_menu")])
+    buttons.append([create_btn("❌ Back to Main Menu", cb="main_menu", style=ButtonStyle.SECONDARY)])
     return InlineKeyboardMarkup(buttons)
 
 def get_bots_keyboard():
+    s_map = get_style_map()
     btns = []
     all_keys = list(BOT_HOSTING.keys())
     for i in range(0, len(all_keys), 2):
         row = []
         k1 = all_keys[i]
-        row.append(InlineKeyboardButton(f"{BOT_HOSTING[k1]['name']}", callback_data=f"bot_srv|{k1}"))
+        row.append(create_btn(f"{BOT_HOSTING[k1]['name']}", cb=f"bot_srv|{k1}", style=s_map[1]))
         if i + 1 < len(all_keys):
             k2 = all_keys[i+1]
-            row.append(InlineKeyboardButton(f"{BOT_HOSTING[k2]['name']}", callback_data=f"bot_srv|{k2}"))
+            row.append(create_btn(f"{BOT_HOSTING[k2]['name']}", cb=f"bot_srv|{k2}", style=s_map[1]))
         btns.append(row)
-    btns.append([InlineKeyboardButton("❌ Back to Store", callback_data="open_shop")])
+    btns.append([create_btn("❌ Back to Store", cb="open_shop", style=ButtonStyle.SECONDARY)])
     return InlineKeyboardMarkup(btns)
 
 def get_telegram_accs_keyboard():
+    s_map = get_style_map()
     btns = []
     all_keys = list(TELEGRAM_ACCS.keys())
     for i in range(0, len(all_keys), 2):
         row = []
         k1 = all_keys[i]
-        row.append(InlineKeyboardButton(f"{TELEGRAM_ACCS[k1]['name']}", callback_data=f"tg_srv|{k1}"))
+        row.append(create_btn(f"{TELEGRAM_ACCS[k1]['name']}", cb=f"tg_srv|{k1}", style=s_map[2]))
         if i + 1 < len(all_keys):
             k2 = all_keys[i+1]
-            row.append(InlineKeyboardButton(f"{TELEGRAM_ACCS[k2]['name']}", callback_data=f"tg_srv|{k2}"))
+            row.append(create_btn(f"{TELEGRAM_ACCS[k2]['name']}", cb=f"tg_srv|{k2}", style=s_map[2]))
         btns.append(row)
-    btns.append([InlineKeyboardButton("❌ Back to Store", callback_data="open_shop")])
+    btns.append([create_btn("❌ Back to Store", cb="open_shop", style=ButtonStyle.SECONDARY)])
     return InlineKeyboardMarkup(btns)
 
 def get_admin_dashboard():
     m_text = "🟢 Maint: OFF" if not SETTINGS.get("maintenance") else "🔴 Maint: ON"
     btns = [
-        [InlineKeyboardButton("✅ Add Service", callback_data="add_service")],
-        [InlineKeyboardButton("🤖 Manage Bots/Hosting", callback_data="manage_bots"), InlineKeyboardButton("📱 Manage Telegram", callback_data="manage_telegram_accs")],
-        [InlineKeyboardButton("⚠️ Website Settings", callback_data="edit_settings")],
-        [InlineKeyboardButton("🔹 Broadcast", callback_data="broadcast_msg"), InlineKeyboardButton(m_text, callback_data="toggle_maint")]
+        [create_btn("✅ Add Service", cb="add_service", style=ButtonStyle.SUCCESS)],
+        [create_btn("🤖 Manage Bots/Hosting", cb="manage_bots", style=ButtonStyle.PRIMARY), create_btn("📱 Manage Telegram", cb="manage_telegram_accs", style=ButtonStyle.PRIMARY)],
+        [create_btn("⚠️ Website Settings", cb="edit_settings", style=ButtonStyle.DANGER)],
+        [create_btn("🔹 Broadcast", cb="broadcast_msg", style=ButtonStyle.PRIMARY), create_btn(m_text, cb="toggle_maint", style=ButtonStyle.SECONDARY)]
     ]
     keys = list(SERVICES.keys())
     for i in range(0, len(keys), 2):
         row = []
         k1 = keys[i]
-        row.append(InlineKeyboardButton(f"✏️ {SERVICES[k1]['name']}", callback_data=f"edit|{k1}"))
+        row.append(create_btn(f"✏️ {SERVICES[k1]['name']}", cb=f"edit|{k1}", style=ButtonStyle.SECONDARY))
         if i+1 < len(keys):
             k2 = keys[i+1]
-            row.append(InlineKeyboardButton(f"✏️ {SERVICES[k2]['name']}", callback_data=f"edit|{k2}"))
+            row.append(create_btn(f"✏️ {SERVICES[k2]['name']}", cb=f"edit|{k2}", style=ButtonStyle.SECONDARY))
         btns.append(row)
     return InlineKeyboardMarkup(btns)
 
@@ -345,7 +352,7 @@ async def start(client, message):
         await message.reply("🚧 **Store Closed.**")
         return
         
-    # LOG NEW USER TO CHANNELS/GROUPS
+    # LOG NEW USER TO BOTH LOG CHATS
     uname = f"@{message.from_user.username}" if message.from_user.username else "No Username"
     start_log_text = (
         "🆕 **New User Started Bot!**\n\n"
@@ -441,7 +448,7 @@ async def callbacks(client, callback: CallbackQuery):
     
     elif data in ["terms", "help", "contact"]:
         text = SETTINGS.get(data, "Not Set")
-        back_kb = InlineKeyboardMarkup([[InlineKeyboardButton("❌ Back", callback_data="main_menu")]])
+        back_kb = InlineKeyboardMarkup([[create_btn("❌ Back", cb="main_menu", style=ButtonStyle.SECONDARY)]])
         try: await callback.message.edit_caption(caption=text, reply_markup=back_kb)
         except: await callback.message.edit_text(text=text, reply_markup=back_kb)
 
@@ -455,37 +462,37 @@ async def callbacks(client, callback: CallbackQuery):
             return
 
         elif data == "manage_bots":
-            btns = [[InlineKeyboardButton("✅ Add Bot/Hosting Setup", callback_data="add_bot")]]
-            for k, v in BOT_HOSTING.items(): btns.append([InlineKeyboardButton(f"{v['name']}", callback_data=f"ed_bot|{k}")])
-            btns.append([InlineKeyboardButton("❌ Back", callback_data="adm_back")])
+            btns = [[create_btn("✅ Add Bot/Hosting Setup", cb="add_bot", style=ButtonStyle.SUCCESS)]]
+            for k, v in BOT_HOSTING.items(): btns.append([create_btn(f"{v['name']}", cb=f"ed_bot|{k}", style=ButtonStyle.PRIMARY)])
+            btns.append([create_btn("❌ Back", cb="adm_back", style=ButtonStyle.SECONDARY)])
             await callback.message.edit_text("🤖 **Manage Bot Making & Hosting**", reply_markup=InlineKeyboardMarkup(btns))
             return
 
         elif data == "add_bot":
             USER_STATE[uid] = {"step": ST_ADD_BOT_NAME}
-            await callback.message.edit_text("✍️ **Enter Name:**\n(e.g. 🤖 Custom Bot)", reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("❌ Cancel", callback_data="cancel_edit")]]))
+            await callback.message.edit_text("✍️ **Enter Name:**\n(e.g. 🤖 Custom Bot)", reply_markup=InlineKeyboardMarkup([[create_btn("❌ Cancel", cb="cancel_edit", style=ButtonStyle.DANGER)]]))
             return
 
         elif data.startswith("ed_bot|"):
             key = data.split("|")[1]
             if key not in BOT_HOSTING: return
-            btns = [[InlineKeyboardButton("🔹 Name", callback_data=f"ed_bfield|{key}|name"), InlineKeyboardButton("ℹ️ Desc", callback_data=f"ed_bfield|{key}|desc")], [InlineKeyboardButton("✅ Add Plan", callback_data=f"add_bplan|{key}")]]
-            for plan in BOT_HOSTING[key]["plans"]: btns.append([InlineKeyboardButton(f"❌ Del: {plan['label']} (₹{plan['price']})", callback_data=f"del_bplan|{key}|{plan['id']}")])
-            btns.append([InlineKeyboardButton("❌ DELETE ITEM", callback_data=f"del_bot|{key}")])
-            btns.append([InlineKeyboardButton("⚠️ Back", callback_data="manage_bots")])
+            btns = [[create_btn("🔹 Name", cb=f"ed_bfield|{key}|name", style=ButtonStyle.PRIMARY), create_btn("ℹ️ Desc", cb=f"ed_bfield|{key}|desc", style=ButtonStyle.PRIMARY)], [create_btn("✅ Add Plan", cb=f"add_bplan|{key}", style=ButtonStyle.SUCCESS)]]
+            for plan in BOT_HOSTING[key]["plans"]: btns.append([create_btn(f"❌ Del: {plan['label']} (₹{plan['price']})", cb=f"del_bplan|{key}|{plan['id']}", style=ButtonStyle.DANGER)])
+            btns.append([create_btn("❌ DELETE ITEM", cb=f"del_bot|{key}", style=ButtonStyle.DANGER)])
+            btns.append([create_btn("⚠️ Back", cb="manage_bots", style=ButtonStyle.SECONDARY)])
             await callback.message.edit_text(f"🤖 **Editing:** {BOT_HOSTING[key]['name']}", reply_markup=InlineKeyboardMarkup(btns))
             return
 
         elif data.startswith("ed_bfield|"):
             _, key, field = data.split("|")
             USER_STATE[uid] = {"step": ST_EDIT_BOT_INPUT, "key": key, "field": field}
-            await callback.message.edit_text(f"✍️ **Enter New {field}:**", reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("❌ Cancel", callback_data="cancel_edit")]]))
+            await callback.message.edit_text(f"✍️ **Enter New {field}:**", reply_markup=InlineKeyboardMarkup([[create_btn("❌ Cancel", cb="cancel_edit", style=ButtonStyle.DANGER)]]))
             return
 
         elif data.startswith("add_bplan|"):
             key = data.split("|")[1]
             USER_STATE[uid] = {"step": ST_ADD_BOT_PLAN_LABEL, "key": key}
-            await callback.message.edit_text("✍️ **Enter Plan Name:**\n(e.g. 1 Month Server)", reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("❌ Cancel", callback_data="cancel_edit")]]))
+            await callback.message.edit_text("✍️ **Enter Plan Name:**\n(e.g. 1 Month Server)", reply_markup=InlineKeyboardMarkup([[create_btn("❌ Cancel", cb="cancel_edit", style=ButtonStyle.DANGER)]]))
             return
 
         elif data.startswith("del_bplan|"):
@@ -501,41 +508,41 @@ async def callbacks(client, callback: CallbackQuery):
             if key in BOT_HOSTING:
                 del BOT_HOSTING[key]
                 await save_bots_to_db(BOT_HOSTING)
-                await callback.message.edit_text("✅ Deleted.", reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("❌ Back", callback_data="manage_bots")]]))
+                await callback.message.edit_text("✅ Deleted.", reply_markup=InlineKeyboardMarkup([[create_btn("❌ Back", cb="manage_bots", style=ButtonStyle.SECONDARY)]]))
             return
 
         elif data == "manage_telegram_accs":
-            btns = [[InlineKeyboardButton("✅ Add Telegram Config", callback_data="add_telegram_acc")]]
-            for k, v in TELEGRAM_ACCS.items(): btns.append([InlineKeyboardButton(f"🔹 {v['name']}", callback_data=f"ed_tg|{k}")])
-            btns.append([InlineKeyboardButton("❌ Back", callback_data="adm_back")])
+            btns = [[create_btn("✅ Add Telegram Config", cb="add_telegram_acc", style=ButtonStyle.SUCCESS)]]
+            for k, v in TELEGRAM_ACCS.items(): btns.append([create_btn(f"🔹 {v['name']}", cb=f"ed_tg|{k}", style=ButtonStyle.PRIMARY)])
+            btns.append([create_btn("❌ Back", cb="adm_back", style=ButtonStyle.SECONDARY)])
             await callback.message.edit_text("📱 **Manage Telegram Categories**", reply_markup=InlineKeyboardMarkup(btns))
             return
 
         elif data == "add_telegram_acc":
             USER_STATE[uid] = {"step": ST_ADD_TG_NAME}
-            await callback.message.edit_text("✍️ **Enter Config Name:**", reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("❌ Cancel", callback_data="cancel_edit")]]))
+            await callback.message.edit_text("✍️ **Enter Config Name:**", reply_markup=InlineKeyboardMarkup([[create_btn("❌ Cancel", cb="cancel_edit", style=ButtonStyle.DANGER)]]))
             return
 
         elif data.startswith("ed_tg|"):
             key = data.split("|")[1]
             if key not in TELEGRAM_ACCS: return
-            btns = [[InlineKeyboardButton("🔹 Name", callback_data=f"ed_tgfield|{key}|name"), InlineKeyboardButton("ℹ️ Desc", callback_data=f"ed_tgfield|{key}|desc")], [InlineKeyboardButton("✅ Add Plan", callback_data=f"add_tgplan|{key}")]]
-            for plan in TELEGRAM_ACCS[key]["plans"]: btns.append([InlineKeyboardButton(f"❌ Del: {plan['label']} (₹{plan['price']})", callback_data=f"del_tgplan|{key}|{plan['id']}")])
-            btns.append([InlineKeyboardButton("❌ DELETE CATEGORY", callback_data=f"del_tg|{key}")])
-            btns.append([InlineKeyboardButton("⚠️ Back", callback_data="manage_telegram_accs")])
+            btns = [[create_btn("🔹 Name", cb=f"ed_tgfield|{key}|name", style=ButtonStyle.PRIMARY), create_btn("ℹ️ Desc", cb=f"ed_tgfield|{key}|desc", style=ButtonStyle.PRIMARY)], [create_btn("✅ Add Plan", cb=f"add_tgplan|{key}", style=ButtonStyle.SUCCESS)]]
+            for plan in TELEGRAM_ACCS[key]["plans"]: btns.append([create_btn(f"❌ Del: {plan['label']} (₹{plan['price']})", cb=f"del_tgplan|{key}|{plan['id']}", style=ButtonStyle.DANGER)])
+            btns.append([create_btn("❌ DELETE CATEGORY", cb=f"del_tg|{key}", style=ButtonStyle.DANGER)])
+            btns.append([create_btn("⚠️ Back", cb="manage_telegram_accs", style=ButtonStyle.SECONDARY)])
             await callback.message.edit_text(f"📱 **Editing:** {TELEGRAM_ACCS[key]['name']}", reply_markup=InlineKeyboardMarkup(btns))
             return
 
         elif data.startswith("ed_tgfield|"):
             _, key, field = data.split("|")
             USER_STATE[uid] = {"step": ST_EDIT_TG_INPUT, "key": key, "field": field}
-            await callback.message.edit_text(f"✍️ **Enter New {field}:**", reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("❌ Cancel", callback_data="cancel_edit")]]))
+            await callback.message.edit_text(f"✍️ **Enter New {field}:**", reply_markup=InlineKeyboardMarkup([[create_btn("❌ Cancel", cb="cancel_edit", style=ButtonStyle.DANGER)]]))
             return
 
         elif data.startswith("add_tgplan|"):
             key = data.split("|")[1]
             USER_STATE[uid] = {"step": ST_ADD_TG_PLAN_LABEL, "key": key}
-            await callback.message.edit_text("✍️ **Enter Plan Name:**", reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("❌ Cancel", callback_data="cancel_edit")]]))
+            await callback.message.edit_text("✍️ **Enter Plan Name:**", reply_markup=InlineKeyboardMarkup([[create_btn("❌ Cancel", cb="cancel_edit", style=ButtonStyle.DANGER)]]))
             return
 
         elif data.startswith("del_tgplan|"):
@@ -551,24 +558,24 @@ async def callbacks(client, callback: CallbackQuery):
             if key in TELEGRAM_ACCS:
                 del TELEGRAM_ACCS[key]
                 await save_telegram_accs_to_db(TELEGRAM_ACCS)
-                await callback.message.edit_text("✅ Deleted.", reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("❌ Back", callback_data="manage_telegram_accs")]]))
+                await callback.message.edit_text("✅ Deleted.", reply_markup=InlineKeyboardMarkup([[create_btn("❌ Back", cb="manage_telegram_accs", style=ButtonStyle.SECONDARY)]]))
             return
 
         elif data == "broadcast_msg":
             USER_STATE[uid] = {"step": ST_BROADCAST}
-            await callback.message.edit_text("📢 **Send Message:**", reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("❌ Cancel", callback_data="cancel_edit")]]))
+            await callback.message.edit_text("📢 **Send Message:**", reply_markup=InlineKeyboardMarkup([[create_btn("❌ Cancel", cb="cancel_edit", style=ButtonStyle.DANGER)]]))
             return
 
         elif data == "edit_settings":
             btns = [
-                [InlineKeyboardButton("Terms", callback_data="ed_set|terms"), InlineKeyboardButton("Help", callback_data="ed_set|help")],
-                [InlineKeyboardButton("Contact", callback_data="ed_set|contact"), InlineKeyboardButton("Set UPI", callback_data="ed_set|upi_id")],
-                [InlineKeyboardButton("Btn Name", callback_data="ed_set|start_btn_text"), InlineKeyboardButton("Channel ID", callback_data="ed_set|proof_channel")],
-                [InlineKeyboardButton("Start Text", callback_data="ed_set|start_text"), InlineKeyboardButton("Channel Template", callback_data="ed_set|channel_template")], 
-                [InlineKeyboardButton("Btn 1 Name", callback_data="ed_set|btn1_text"), InlineKeyboardButton("Btn 1 URL", callback_data="ed_set|btn1_url")],
-                [InlineKeyboardButton("Btn 2 Name", callback_data="ed_set|btn2_text"), InlineKeyboardButton("Btn 2 URL", callback_data="ed_set|btn2_url")],
-                [InlineKeyboardButton("Start Image", callback_data="set_img|start_image"), InlineKeyboardButton("QR Image", callback_data="set_img|qr_image")],
-                [InlineKeyboardButton("❌ Back", callback_data="adm_back")]
+                [create_btn("Terms", cb="ed_set|terms", style=ButtonStyle.PRIMARY), create_btn("Help", cb="ed_set|help", style=ButtonStyle.PRIMARY)],
+                [create_btn("Contact", cb="ed_set|contact", style=ButtonStyle.PRIMARY), create_btn("Set UPI", cb="ed_set|upi_id", style=ButtonStyle.PRIMARY)],
+                [create_btn("Btn Name", cb="ed_set|start_btn_text", style=ButtonStyle.PRIMARY), create_btn("Channel ID", cb="ed_set|proof_channel", style=ButtonStyle.PRIMARY)],
+                [create_btn("Start Text", cb="ed_set|start_text", style=ButtonStyle.PRIMARY), create_btn("Channel Template", cb="ed_set|channel_template", style=ButtonStyle.PRIMARY)], 
+                [create_btn("Btn 1 Name", cb="ed_set|btn1_text", style=ButtonStyle.PRIMARY), create_btn("Btn 1 URL", cb="ed_set|btn1_url", style=ButtonStyle.PRIMARY)],
+                [create_btn("Btn 2 Name", cb="ed_set|btn2_text", style=ButtonStyle.PRIMARY), create_btn("Btn 2 URL", cb="ed_set|btn2_url", style=ButtonStyle.PRIMARY)],
+                [create_btn("Start Image", cb="set_img|start_image", style=ButtonStyle.PRIMARY), create_btn("QR Image", cb="set_img|qr_image", style=ButtonStyle.PRIMARY)],
+                [create_btn("❌ Back", cb="adm_back", style=ButtonStyle.SECONDARY)]
             ]
             await callback.message.edit_text("⚙️ **Settings**", reply_markup=InlineKeyboardMarkup(btns))
             return
@@ -576,43 +583,43 @@ async def callbacks(client, callback: CallbackQuery):
         elif data.startswith("set_img|"):
             key = data.split("|")[1]
             USER_STATE[uid] = {"step": ST_SET_IMAGE, "key": key}
-            await callback.message.edit_text("📸 **Send New Photo:**", reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("❌ Cancel", callback_data="cancel_edit")]]))
+            await callback.message.edit_text("📸 **Send New Photo:**", reply_markup=InlineKeyboardMarkup([[create_btn("❌ Cancel", cb="cancel_edit", style=ButtonStyle.DANGER)]]))
             return
 
         elif data.startswith("ed_set|"):
             key = data.split("|")[1]
             if key == "channel_template":
                 USER_STATE[uid] = {"step": ST_EDIT_CHANNEL_TEMPLATE}
-                await callback.message.edit_text("📝 **Edit Channel Template**\nVariables: `{item}`, `{plan}`, `{price}`, `{bot_username}`\n👇 Send new template:", reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("❌ Cancel", callback_data="cancel_edit")]]))
+                await callback.message.edit_text("📝 **Edit Channel Template**\nVariables: `{item}`, `{plan}`, `{price}`, `{bot_username}`\n👇 Send new template:", reply_markup=InlineKeyboardMarkup([[create_btn("❌ Cancel", cb="cancel_edit", style=ButtonStyle.DANGER)]]))
             elif key == "start_text":
                 USER_STATE[uid] = {"step": ST_EDIT_SETTING_TEXT, "key": key}
-                await callback.message.edit_text("📝 **Edit Start Text**\nVariables: `{name}`, `{mention}`\n👇 Send new text:", reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("❌ Cancel", callback_data="cancel_edit")]]))
+                await callback.message.edit_text("📝 **Edit Start Text**\nVariables: `{name}`, `{mention}`\n👇 Send new text:", reply_markup=InlineKeyboardMarkup([[create_btn("❌ Cancel", cb="cancel_edit", style=ButtonStyle.DANGER)]]))
             else:
                 USER_STATE[uid] = {"step": ST_EDIT_SETTING_TEXT, "key": key}
                 curr = SETTINGS.get(key, "Not Set")
-                await callback.message.edit_text(f"✍️ **Editing: {key}**\n\nCurrent: `{curr}`\n\n👇 **Send New Value:**", reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("❌ Cancel", callback_data="cancel_edit")]]))
+                await callback.message.edit_text(f"✍️ **Editing: {key}**\n\nCurrent: `{curr}`\n\n👇 **Send New Value:**", reply_markup=InlineKeyboardMarkup([[create_btn("❌ Cancel", cb="cancel_edit", style=ButtonStyle.DANGER)]]))
             return
 
         elif data == "add_service":
             USER_STATE[uid] = {"step": ST_ADD_SRV_NAME}
-            await callback.message.edit_text("✍️ **Enter Service Name:**", reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("❌ Cancel", callback_data="cancel_edit")]]))
+            await callback.message.edit_text("✍️ **Enter Service Name:**", reply_markup=InlineKeyboardMarkup([[create_btn("❌ Cancel", cb="cancel_edit", style=ButtonStyle.DANGER)]]))
             return
 
         elif data.startswith("sel_type|"):
             srv_type = data.split("|")[1]
             USER_STATE[uid]["type"] = srv_type
             USER_STATE[uid]["step"] = ST_ADD_SRV_DESC
-            await callback.message.edit_text("✍️ **Enter Description:**", reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("❌ Cancel", callback_data="cancel_edit")]]))
+            await callback.message.edit_text("✍️ **Enter Description:**", reply_markup=InlineKeyboardMarkup([[create_btn("❌ Cancel", cb="cancel_edit", style=ButtonStyle.DANGER)]]))
             return
 
         elif data.startswith("edit|"):
             key = data.split("|")[1]
             if key not in SERVICES: return await callback.answer("Not found", show_alert=True)
             srv = SERVICES[key]
-            btns = [[InlineKeyboardButton("🔹 Name", callback_data=f"ed_field|{key}|name"), InlineKeyboardButton("ℹ️ Desc", callback_data=f"ed_field|{key}|desc")], [InlineKeyboardButton("✅ Add Plan", callback_data=f"add_plan|{key}")]]
-            for plan in srv["plans"]: btns.append([InlineKeyboardButton(f"❌ Del: {plan['label']} (₹{plan['price']})", callback_data=f"del_plan|{key}|{plan['id']}")])
-            btns.append([InlineKeyboardButton("❌ DELETE SERVICE", callback_data=f"del_srv|{key}")])
-            btns.append([InlineKeyboardButton("⚠️ Back", callback_data="adm_back")])
+            btns = [[create_btn("🔹 Name", cb=f"ed_field|{key}|name", style=ButtonStyle.PRIMARY), create_btn("ℹ️ Desc", cb=f"ed_field|{key}|desc", style=ButtonStyle.PRIMARY)], [create_btn("✅ Add Plan", cb=f"add_plan|{key}", style=ButtonStyle.SUCCESS)]]
+            for plan in srv["plans"]: btns.append([create_btn(f"❌ Del: {plan['label']} (₹{plan['price']})", cb=f"del_plan|{key}|{plan['id']}", style=ButtonStyle.DANGER)])
+            btns.append([create_btn("❌ DELETE SERVICE", cb=f"del_srv|{key}", style=ButtonStyle.DANGER)])
+            btns.append([create_btn("⚠️ Back", cb="adm_back", style=ButtonStyle.SECONDARY)])
             await callback.message.edit_text(f"🔧 **Editing:** {srv['name']}", reply_markup=InlineKeyboardMarkup(btns))
             return
 
@@ -623,7 +630,7 @@ async def callbacks(client, callback: CallbackQuery):
         elif data.startswith("ed_field|"):
             _, key, field = data.split("|")
             USER_STATE[uid] = {"step": ST_EDIT_INPUT, "key": key, "field": field}
-            await callback.message.edit_text(f"✍️ **Enter New {field}:**", reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("❌ Cancel", callback_data="cancel_edit")]]))
+            await callback.message.edit_text(f"✍️ **Enter New {field}:**", reply_markup=InlineKeyboardMarkup([[create_btn("❌ Cancel", cb="cancel_edit", style=ButtonStyle.DANGER)]]))
             return
 
         elif data.startswith("del_srv|"):
@@ -637,7 +644,7 @@ async def callbacks(client, callback: CallbackQuery):
         elif data.startswith("add_plan|"):
             key = data.split("|")[1]
             USER_STATE[uid] = {"step": ST_ADD_PLAN_LABEL, "key": key}
-            await callback.message.edit_text("✍️ **Enter Plan Name:**", reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("❌ Cancel", callback_data="cancel_edit")]]))
+            await callback.message.edit_text("✍️ **Enter Plan Name:**", reply_markup=InlineKeyboardMarkup([[create_btn("❌ Cancel", cb="cancel_edit", style=ButtonStyle.DANGER)]]))
             return
 
         elif data.startswith("del_plan|"):
@@ -660,8 +667,8 @@ async def callbacks(client, callback: CallbackQuery):
         srv = SERVICES[key]
         if not srv["plans"]: return await callback.answer("Coming Soon", show_alert=True)
         btns = []
-        for plan in srv["plans"]: btns.append([InlineKeyboardButton(f"🔹 {plan['label']} - ₹{plan['price']}", callback_data=f"pay|{key}|{plan['id']}")])
-        btns.append([InlineKeyboardButton("❌ Back", callback_data="open_shop")])
+        for plan in srv["plans"]: btns.append([create_btn(f"🔹 {plan['label']} - ₹{plan['price']}", cb=f"pay|{key}|{plan['id']}", style=ButtonStyle.PRIMARY)])
+        btns.append([create_btn("❌ Back", cb="open_shop", style=ButtonStyle.SECONDARY)])
         await callback.message.edit_caption(f"**{srv['name']}**\n\n{srv['desc']}\n\n👇 **Select duration:**", reply_markup=InlineKeyboardMarkup(btns))
 
     elif data.startswith("bot_srv|"):
@@ -670,8 +677,8 @@ async def callbacks(client, callback: CallbackQuery):
         bot_item = BOT_HOSTING[key]
         if not bot_item.get("plans"): return await callback.answer("No plans", show_alert=True)
         btns = []
-        for plan in bot_item["plans"]: btns.append([InlineKeyboardButton(f"🔹 {plan['label']} - ₹{plan['price']}", callback_data=f"pay|{key}|{plan['id']}")])
-        btns.append([InlineKeyboardButton("❌ Back", callback_data="open_bots")])
+        for plan in bot_item["plans"]: btns.append([create_btn(f"🔹 {plan['label']} - ₹{plan['price']}", cb=f"pay|{key}|{plan['id']}", style=ButtonStyle.PRIMARY)])
+        btns.append([create_btn("❌ Back", cb="open_bots", style=ButtonStyle.SECONDARY)])
         await callback.message.edit_caption(f"**{bot_item['name']}**\n\n{bot_item.get('desc', '')}\n\n👇 **Select Plan:**", reply_markup=InlineKeyboardMarkup(btns))
 
     elif data.startswith("tg_srv|"):
@@ -680,8 +687,8 @@ async def callbacks(client, callback: CallbackQuery):
         tg_acc = TELEGRAM_ACCS[key]
         if not tg_acc.get("plans"): return await callback.answer("No configurations", show_alert=True)
         btns = []
-        for plan in tg_acc["plans"]: btns.append([InlineKeyboardButton(f"🔹 {plan['label']} - ₹{plan['price']}", callback_data=f"pay|{key}|{plan['id']}")])
-        btns.append([InlineKeyboardButton("❌ Back", callback_data="open_telegram_accs")])
+        for plan in tg_acc["plans"]: btns.append([create_btn(f"🔹 {plan['label']} - ₹{plan['price']}", cb=f"pay|{key}|{plan['id']}", style=ButtonStyle.PRIMARY)])
+        btns.append([create_btn("❌ Back", cb="open_telegram_accs", style=ButtonStyle.SECONDARY)])
         await callback.message.edit_caption(f"**{tg_acc['name']}**\n\n{tg_acc.get('desc', '')}\n\n👇 **Select Package:**", reply_markup=InlineKeyboardMarkup(btns))
 
     elif data.startswith("pay|"):
@@ -700,12 +707,12 @@ async def callbacks(client, callback: CallbackQuery):
         qr_img = SETTINGS.get("qr_image", DEFAULT_QR)
         text = (f"💳 **Place Your Order**\n\nService: **{srv['name']}**\nPlan: **{plan['label']}**\nAmount: **₹{plan['price']}**\nOrder ID: `SILENT{uid}X{plan_id}`\n\n⏰ Pay within 10 mins.\n👇 **Pay via UPI:**\n`{upi_val}`")
         USER_STATE[uid] = {"step": ST_PHOTO, "key": key, "plan_id": plan_id}
-        btns = InlineKeyboardMarkup([[InlineKeyboardButton("✅ Submit Proof", callback_data="ask_proof")],[InlineKeyboardButton("❌ Back", callback_data="open_shop")]])
+        btns = InlineKeyboardMarkup([[create_btn("✅ Submit Proof", cb="ask_proof", style=ButtonStyle.SUCCESS)],[create_btn("❌ Back", cb="open_shop", style=ButtonStyle.SECONDARY)]])
         try: await callback.message.edit_media(InputMediaPhoto(qr_img, caption=text), reply_markup=btns)
         except: await callback.message.edit_media(InputMediaPhoto(DEFAULT_QR, caption=text), reply_markup=btns)
 
     elif data == "ask_proof":
-        await callback.message.edit_caption("📸 **Upload Payment Screenshot**", reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("❌ Cancel", callback_data="cancel")]]))
+        await callback.message.edit_caption("📸 **Upload Payment Screenshot**", reply_markup=InlineKeyboardMarkup([[create_btn("❌ Cancel", cb="cancel", style=ButtonStyle.DANGER)]]))
 
     elif data == "cancel":
         if uid in USER_STATE: del USER_STATE[uid]
@@ -715,24 +722,26 @@ async def callbacks(client, callback: CallbackQuery):
     elif data.startswith("usr_req_otp"):
         await callback.answer("Requesting...", show_alert=False)
         for admin in ADMIN_LIST:
-            try: await client.send_message(admin, f"🔔 **OTP REQ**\nUser: {callback.from_user.mention}", reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("✅ Give OTP", callback_data=f"adm_give_otp|{uid}")]]))
+            try: await client.send_message(admin, f"🔔 **OTP REQ**\nUser: {callback.from_user.mention}", reply_markup=InlineKeyboardMarkup([[create_btn("✅ Give OTP", cb=f"adm_give_otp|{uid}", style=ButtonStyle.SUCCESS)]]))
             except: pass
         await callback.message.edit_text("⏳ **Waiting for OTP...**")
 
-    # FULFILLMENT
+    # FULFILLMENT (ADMIN TRACKING ADDED)
     if uid in ADMIN_LIST and data.startswith("adm_"):
         if "|" not in data: return
         action = data.split("|")[0]
         try: target_uid = int(data.split("|")[1])
         except: return
 
+        admin_mention = callback.from_user.mention
+        orig_caption = callback.message.caption or ""
+
         if action in ["adm_inv", "adm_std", "adm_otp", "adm_give_num"]:
             proof_channel = SETTINGS.get("proof_channel")
             if proof_channel:
                 try:
-                    orig = callback.message.caption or ""
                     ival="Unknown"; pval="Unknown"; prval="Unknown"
-                    for line in orig.split("\n"):
+                    for line in orig_caption.split("\n"):
                         if "🛒" in line: ival = line.split(":", 1)[1].strip()
                         if "📅" in line: pval = line.split(":", 1)[1].strip()
                         if "💰" in line: prval = line.split(":", 1)[1].strip()
@@ -743,28 +752,30 @@ async def callbacks(client, callback: CallbackQuery):
 
         if action == "adm_inv":
             await client.send_message(target_uid, f"✅ **Invite Sent.**\n\n{ORDER_COMPLETE_TEXT}")
-            await callback.edit_message_caption("✅ **Invite Sent.**")
+            await callback.message.edit_caption(f"{orig_caption}\n\n✅ **Invite Sent by {admin_mention}.**", reply_markup=InlineKeyboardMarkup([]))
         elif action == "adm_std":
             USER_STATE[uid] = {"step": ST_ADMIN_TXT, "target": target_uid}
-            await callback.edit_message_caption("✍️ **Enter Fulfillment Info/Data:**")
+            await callback.message.edit_caption(f"{orig_caption}\n\n⏳ **{admin_mention} is entering details...**", reply_markup=InlineKeyboardMarkup([]))
         elif action == "adm_otp": 
             await client.send_message(target_uid, "✅ **Accepted!**\nSend Mobile Number.")
             USER_STATE[target_uid] = {"step": ST_WAIT_NUM}
-            await callback.edit_message_caption("⏳ **Waiting for Num...**")
+            await callback.message.edit_caption(f"{orig_caption}\n\n✅ **Approved by {admin_mention} (Waiting for Num...)**", reply_markup=InlineKeyboardMarkup([]))
         elif action == "adm_give_num": 
             USER_STATE[uid] = {"step": ST_ADMIN_GIVE_NUM, "target": target_uid}
-            await callback.edit_message_caption("✍️ **Enter Mobile Num:**")
+            await callback.message.edit_caption(f"{orig_caption}\n\n⏳ **{admin_mention} is entering Mobile Num...**", reply_markup=InlineKeyboardMarkup([]))
         elif action == "adm_give_otp": 
             USER_STATE[uid] = {"step": ST_ADMIN_GIVE_OTP, "target": target_uid}
             await client.send_message(uid, "✍️ **Enter OTP:**")
             await callback.answer()
+            await callback.message.edit_reply_markup(InlineKeyboardMarkup([]))
+            await callback.message.reply_text(f"🔑 **{admin_mention} is handling the OTP.**", quote=True)
         elif action == "adm_reqotp": 
             await client.send_message(target_uid, "🔔 **Send OTP.**")
             USER_STATE[target_uid] = {"step": ST_WAIT_OTP}
-            await callback.edit_message_caption("⏳ **Waiting for OTP...**")
+            await callback.message.edit_caption(f"{orig_caption}\n\n⏳ **{admin_mention} requested OTP from user.**", reply_markup=InlineKeyboardMarkup([]))
         elif action == "adm_rej":
             await client.send_message(target_uid, "❌ **Payment Rejected.**")
-            await callback.edit_message_caption("❌ **Rejected.**")
+            await callback.message.edit_caption(f"{orig_caption}\n\n❌ **Rejected by {admin_mention}.**", reply_markup=InlineKeyboardMarkup([]))
 
 
 # --- MODULAR BOT DIRECT REPLY SYSTEM ---
@@ -830,7 +841,7 @@ async def main_message_handler(client, message):
             if step == ST_ADD_SRV_NAME:
                 USER_STATE[uid]["name"] = message.text
                 USER_STATE[uid]["step"] = ST_ADD_SRV_TYPE
-                btns = [[InlineKeyboardButton("Standard OTP", callback_data="sel_type|otp")], [InlineKeyboardButton("Admin OTP", callback_data="sel_type|admin_otp")], [InlineKeyboardButton("Invite", callback_data="sel_type|invite")], [InlineKeyboardButton("ID/Pass", callback_data="sel_type|std")]]
+                btns = [[create_btn("Standard OTP", cb="sel_type|otp", style=ButtonStyle.PRIMARY)], [create_btn("Admin OTP", cb="sel_type|admin_otp", style=ButtonStyle.PRIMARY)], [create_btn("Invite", cb="sel_type|invite", style=ButtonStyle.PRIMARY)], [create_btn("ID/Pass", cb="sel_type|std", style=ButtonStyle.PRIMARY)]]
                 await message.reply("⚙️ **Select Type**", reply_markup=InlineKeyboardMarkup(btns))
                 return
             if step == ST_ADD_SRV_DESC:
@@ -950,7 +961,7 @@ async def main_message_handler(client, message):
                     else: return await message.reply("⚠️ Please send text.")
                 elif step == ST_ADMIN_GIVE_NUM:
                     if message.text:
-                        btn = InlineKeyboardMarkup([[InlineKeyboardButton("🔹 🔓 Request OTP", callback_data="usr_req_otp")]])
+                        btn = InlineKeyboardMarkup([[create_btn("🔹 🔓 Request OTP", cb="usr_req_otp", style=ButtonStyle.PRIMARY)]])
                         await client.send_message(target_uid, f"✅ **Login Num:** `{message.text}`", reply_markup=btn)
                         await message.reply("✅ Sent.")
                     else: return
@@ -972,6 +983,7 @@ async def main_message_handler(client, message):
             else: await message.reply("⚠️ Please send a valid payment screenshot.")
             return
 
+        # FIX: The hanging issue was here. Unconditionally delete the state after submission (unless waiting for email).
         if step == ST_UTR:
             if message.text:
                 state["utr"] = message.text
@@ -986,7 +998,7 @@ async def main_message_handler(client, message):
                 else:
                     await send_proof_to_admin(client, uid, state)
                     await message.reply("✅ **Submitted!**")
-                    if srv_type == "std": del USER_STATE[uid]
+                    del USER_STATE[uid] # Now it will delete for all types (OTP, std, etc.)
             else: await message.reply("⚠️ Please send your UTR text.")
             return
 
@@ -1001,7 +1013,7 @@ async def main_message_handler(client, message):
         if step == ST_WAIT_NUM:
             if message.text:
                 for admin in ADMIN_LIST:
-                    try: await client.send_message(admin, f"📱 **User Num:** `{message.text}`\nUser: {uid}", reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("Request OTP", callback_data=f"adm_reqotp|{uid}")]]))
+                    try: await client.send_message(admin, f"📱 **User Num:** `{message.text}`\nUser: {uid}", reply_markup=InlineKeyboardMarkup([[create_btn("Request OTP", cb=f"adm_reqotp|{uid}", style=ButtonStyle.PRIMARY)]]))
                     except: pass
                 await message.reply("✅ Sent.")
             return
@@ -1009,17 +1021,16 @@ async def main_message_handler(client, message):
         if step == ST_WAIT_OTP:
             if message.text:
                 for admin in ADMIN_LIST:
-                    try: await client.send_message(admin, f"🔑 **OTP:** `{message.text}`\nUser: {uid}", reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("✅ Confirm", callback_data=f"adm_suc|{uid}")]]))
+                    try: await client.send_message(admin, f"🔑 **OTP:** `{message.text}`\nUser: {uid}", reply_markup=InlineKeyboardMarkup([[create_btn("✅ Confirm", cb=f"adm_suc|{uid}", style=ButtonStyle.SUCCESS)]]))
                     except: pass
                 await message.reply("✅ Sent.")
                 del USER_STATE[uid]
             return
 
-    # 2. LOG NORMAL USER MESSAGES (MODULAR SYSTEM)
+    # 2. LOG NORMAL USER MESSAGES TO BOTH LOGGER GROUPS
     if message.from_user and uid not in ADMIN_LIST:
         for log_chat in VALID_LOG_CHATS:
             try:
-                # Forward user's message to log channels/groups
                 fw = await message.forward(log_chat)
                 FORWARD_MAP[fw.id] = uid
                 
@@ -1062,11 +1073,11 @@ async def send_proof_to_admin(client, uid, state):
     caption = (f"🚨 **NEW ORDER** 🚨\n👤 {user_link}\n🛒 {name}\n📅 {label}\n💰 ₹{price}\n🧾 `{state['utr']}`")
     btns = []
     
-    if srv_type == "invite": btns.append([InlineKeyboardButton("✅ Invite", callback_data=f"adm_inv|{uid}")])
-    elif srv_type == "otp": btns.append([InlineKeyboardButton("✅ Approve", callback_data=f"adm_otp|{uid}")])
-    elif srv_type == "admin_otp": btns.append([InlineKeyboardButton("✅ Approve", callback_data=f"adm_give_num|{uid}")])
-    else: btns.append([InlineKeyboardButton("✅ Approve", callback_data=f"adm_std|{uid}")])
-    btns.append([InlineKeyboardButton("❌ Reject", callback_data=f"adm_rej|{uid}")])
+    if srv_type == "invite": btns.append([create_btn("✅ Invite", cb=f"adm_inv|{uid}", style=ButtonStyle.SUCCESS)])
+    elif srv_type == "otp": btns.append([create_btn("✅ Approve", cb=f"adm_otp|{uid}", style=ButtonStyle.SUCCESS)])
+    elif srv_type == "admin_otp": btns.append([create_btn("✅ Approve", cb=f"adm_give_num|{uid}", style=ButtonStyle.SUCCESS)])
+    else: btns.append([create_btn("✅ Approve", cb=f"adm_std|{uid}", style=ButtonStyle.SUCCESS)])
+    btns.append([create_btn("❌ Reject", cb=f"adm_rej|{uid}", style=ButtonStyle.DANGER)])
     
     for admin in ADMIN_LIST:
         try:
@@ -1100,7 +1111,7 @@ async def main():
     doc_set = await col_settings.find_one({"_id": "site_settings"})
     if doc_set:
         SETTINGS = doc_set["data"]
-        ADMIN_LIST = SETTINGS.get("admins", [OWNER_ID])
+        ADMIN_LIST = list(set(SETTINGS.get("admins", [OWNER_ID]) + SUDO_USERS))
     else:
         SETTINGS = DEFAULT_SETTINGS
         await col_settings.insert_one({"_id": "site_settings", "data": SETTINGS})
