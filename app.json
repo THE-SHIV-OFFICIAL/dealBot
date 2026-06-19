@@ -6,7 +6,7 @@
     "telegram",
     "bot",
     "python",
-    "pyrogram",
+    "kurigram",
     "shop",
     "upi",
     "telegram-accounts"
@@ -44,12 +44,16 @@
       "description": "Your Telegram Numeric User ID",
       "required": true
     },
-    "LOG_CHANNEL": {
-      "description": "Log Channel ID or Username (e.g., -1001234567890 or @apnachannel)",
+    "SUDO_USERS": {
+      "description": "Space-separated User IDs of Sudo Admins (e.g., 12345 67890)",
       "required": false
     },
     "LOG_GROUP": {
-      "description": "Log Group ID or Username (e.g., -1009876543210 or @apnagroup)",
+      "description": "Primary Log Group ID or Username (e.g., -1009876543210 or @apnagroup)",
+      "required": true
+    },
+    "LOG_GROUP_2": {
+      "description": "Secondary Log Group ID or Username for backup logging",
       "required": false
     }
   }
